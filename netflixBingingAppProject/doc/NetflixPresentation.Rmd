@@ -139,7 +139,7 @@ knitr::kable(showDetailsDf)
 ```{r sqlchunk, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
 mydb = dbConnect(MySQL(), 
                  user = 'root', 
-                 password = 'Pass@123', 
+                 password = '****', 
                  dbname = 'netflix_data', 
                  host = 'localhost')
 
