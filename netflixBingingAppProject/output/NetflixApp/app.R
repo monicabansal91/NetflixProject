@@ -19,7 +19,7 @@ library(ggthemes)
 
 # mydb = dbConnect(MySQL(), 
 #                  user = 'root', 
-#                  password = 'Pass@123', 
+#                  password = '****', 
 #                  dbname = 'netflix_data', 
 #                  host = 'localhost')
 # 
