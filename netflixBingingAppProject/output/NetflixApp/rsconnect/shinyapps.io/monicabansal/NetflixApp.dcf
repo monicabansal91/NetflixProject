@@ -1,0 +1,12 @@
+name: NetflixApp
+title: NetflixApp
+username:
+account: monicabansal
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 336000
+bundleId: 1352124
+url: https://monicabansal.shinyapps.io/NetflixApp/
+when: 1525287515.80411
+asMultiple: FALSE
+asStatic: FALSE

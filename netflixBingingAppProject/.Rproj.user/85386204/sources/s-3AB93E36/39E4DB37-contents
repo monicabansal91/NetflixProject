@@ -1,0 +1,211 @@
+netflix_user1_data <- read_csv("./data/netflix_user2.txt", col_types = cols(WatchingDate = col_date(format = "%m/%d/%y"), X1 = col_skip(), value = col_skip()), locale = locale(encoding = "ISO-8859-1"))
+
+netflix_user1_data <- netflix_user1_data %>%
+  mutate(season = "")
+netflix_user1_data <- netflix_user1_data %>%
+  mutate(Episodes = "")
+
+netflix_user1_data$Titles <- sapply(netflix_user1_data$Titles, removeDoubleQuotes)
+
+for(i in 1:nrow(netflix_user1_data)){
+  title <- netflix_user1_data$Titles[i]
+  pattern <- NA
+  if(str_detect(title, "Season")){
+    pattern <- "Season"
+  }else{
+    if(str_detect(title, "Volume")){
+      pattern <- "Volume"
+    }else{
+      if(str_detect(title, "Series")){
+        pattern <- "Series"
+      }
+    }
+  }
+  if(!is.na(pattern)){
+    titleArr <- cleanTitles(title, pattern)
+    if(!is.na(titleArr)){
+      if(length(titleArr[[1]]) > 1){
+        if(titleArr[[1]][2] == ""){
+          netflix_user1_data$season[i] <- NA
+          netflix_user1_data$Episodes[i] <- NA
+        }else{
+          netflix_user1_data$Titles[i] <- removeEndColons(titleArr[[1]][1])
+          if(str_detect(titleArr[[1]][2], ":")){
+            seasonArr <- str_split(titleArr[[1]][2], ":")
+            netflix_user1_data$season[i] <- paste0(pattern, seasonArr[[1]][1])
+            netflix_user1_data$Episodes[i] <- seasonArr[[1]][2]
+          }
+          
+        }
+        
+      }
+    }
+  }else{
+    if(str_detect(title, ":")){
+      strArr <- str_split(title, ":")
+      
+      if(length(strArr[[1]]) >= 3){
+        if(tolower(str_trim(strArr[[1]][1])) == tolower(str_trim(strArr[[1]][2]))){
+          netflix_user1_data$Titles[i] <- strArr[[1]][1]
+          netflix_user1_data$season[i] <- paste0("Season", " 1")
+          if(length(strArr[[1]]) == 4){
+            netflix_user1_data$Episodes[i] <- paste0(strArr[[1]][3], ":", strArr[[1]][4])
+          }else{
+            netflix_user1_data$Episodes[i] <- strArr[[1]][3]
+          }
+          
+        }else{
+          newTitle <- paste0(strArr[[1]][1], " 2")
+          if(tolower(str_trim(newTitle)) == tolower(str_trim(strArr[[1]][2]))){
+            netflix_user1_data$Titles[i] <- strArr[[1]][1]
+            netflix_user1_data$season[i] <- paste0("Season", " 2")
+            if(length(strArr[[1]]) == 4){
+              netflix_user1_data$Episodes[i] <- paste0(strArr[[1]][3], ":", strArr[[1]][4])
+            }else{
+              netflix_user1_data$Episodes[i] <- strArr[[1]][3]
+            }
+          }else{
+            netflix_user1_data$Titles[i] <- strArr[[1]][1]
+            netflix_user1_data$season[i] <- strArr[[1]][2]
+            if(length(strArr[[1]]) == 4){
+              netflix_user1_data$Episodes[i] <- paste0(strArr[[1]][3], ":", strArr[[1]][4])
+            }else{
+              netflix_user1_data$Episodes[i] <- strArr[[1]][3]
+            }
+          }
+        }
+      }else{
+        netflix_user1_data$season[i] <- NA
+        netflix_user1_data$Episodes[i] <- NA
+      }
+    }else{
+      netflix_user1_data$season[i] <- NA
+      netflix_user1_data$Episodes[i] <- NA
+    }
+    
+  }
+}  
+
+removeDoubleQuotes <- function(string){
+  if(!is.na(string)){
+    string <- gsub("\"", "", string, fixed=TRUE)
+  }
+  return(string)
+}
+
+
+
+library(httr)
+library(curl)
+library(jsonlite)
+
+api.key.omdb <- "c8e8512b"
+
+getShowData <- function(title){
+  url <- paste0("http://www.omdbapi.com/?apikey=", api.key.omdb, "&t=", title, "&r=json")
+  json_result <- url %>% curl() %>% readLines()
+  return(prettify(json_result) %>% fromJSON())
+}
+
+distinctShows <- netflix_user1_data[!duplicated(netflix_user1_data$Titles), ]
+
+showDetailsDf <- distinctShows %>%
+  select(Titles)
+showDetailsDf <- showDetailsDf %>%
+  mutate(Year="", Rated="", Released="", Runtime="", Genre="", Director="", Writer="", Actors="", Plot="", Language="", Country="", imdbRating="", imdbVotes="", imdbID="", Type="")
+
+
+for(i in 1:nrow(showDetailsDf)){
+  
+  title <- showDetailsDf$Titles[i]
+  print(title)
+  title <- str_trim(title)
+  if(str_detect(title, ":")){
+    title <- str_replace_all(title, ":", "")
+  }
+  if(str_detect(title, "\\s")){
+    title <- str_replace_all(title, "\\s", "+")
+  }
+  if(str_detect(title, "\\(")){
+    titleArr <- str_split(title, "\\(")
+    title <- titleArr[[1]][1]
+  }
+  showDetails <- getShowData(title)
+  if(showDetails$Response == "False"){
+    showDetailsDf$Year[i] <- NA
+    showDetailsDf$Rated[i] <- NA
+    showDetailsDf$Released[i] <- NA
+    showDetailsDf$Runtime[i] <- NA
+    showDetailsDf$Genre[i] <- NA
+    showDetailsDf$Director[i] <- NA
+    showDetailsDf$Writer[i] <- NA
+    showDetailsDf$Actors[i] <- NA
+    showDetailsDf$Plot[i] <- NA
+    showDetailsDf$Language[i] <- NA
+    showDetailsDf$Country[i] <- NA
+    showDetailsDf$imdbRating[i] <- NA
+    showDetailsDf$imdbVotes[i] <- NA
+    showDetailsDf$imdbID[i] <- NA
+    showDetailsDf$Type[i] <- NA
+  }else{
+    if(length(showDetails) > 2){
+      showDetailsDf$Year[i] <- showDetails$Year
+      showDetailsDf$Rated[i] <- showDetails$Rated
+      showDetailsDf$Released[i] <- showDetails$Released
+      showDetailsDf$Runtime[i] <- showDetails$Runtime
+      showDetailsDf$Genre[i] <- showDetails$Genre
+      showDetailsDf$Director[i] <- showDetails$Director
+      showDetailsDf$Writer[i] <- showDetails$Writer
+      showDetailsDf$Actors[i] <- showDetails$Actors
+      showDetailsDf$Plot[i] <- showDetails$Plot
+      showDetailsDf$Language[i] <- showDetails$Language
+      showDetailsDf$Country[i] <- showDetails$Country
+      showDetailsDf$imdbRating[i] <- showDetails$imdbRating
+      showDetailsDf$imdbVotes[i] <- showDetails$imdbVotes
+      showDetailsDf$imdbID[i] <- showDetails$imdbID
+      showDetailsDf$Type[i] <- showDetails$Type
+    }
+  }
+}
+
+
+cleanRuntime <- function(runtime){
+  if(!is.na(runtime)){
+    if(str_detect(runtime, "min")){
+      runtime <- str_remove(runtime, "min")
+      runtime <- str_trim(runtime)
+      return(as.numeric(runtime))
+    }else{
+      if(is.numeric(runtime)){
+        return(runtime)
+      }
+    }
+  }
+  return(NA)
+  
+}
+
+showDetailsDf$Runtime <- sapply(showDetailsDf$Runtime, cleanRuntime)
+
+
+cleanYear <- function(year){
+  year <- iconv(year, to = "UTF-8")
+  if(!is.na(year)){
+    if(str_detect(year, "â€“")){
+      year <- str_replace(year, "â€“", "-")
+    }
+    if(str_detect(year, "-$")){
+      year <- str_replace(year, "-$", "")
+    }
+  }
+  return(year)
+}
+
+showDetailsDf$Year <- sapply(showDetailsDf$Year, cleanYear)
+
+convertToUTF8 <- function(str){
+  str <- iconv(str, to = "UTF-8")
+  return(str)
+}
+
+showDetailsDf$Actors <- sapply(showDetailsDf$Actors, convertToUTF8)

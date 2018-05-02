@@ -1,0 +1,5 @@
+"0","netflix_user1_data <- read_csv(""../data/netflix_user4.txt"", col_types = cols(WatchingDate = col_date(format = ""%m/%d/%y""), X1 = col_skip(), value = col_skip()), locale = locale(encoding = ""ISO-8859-1""))"
+"0","netflix_user1_data <- netflix_user1_data %>%"
+"0","  mutate(season = """")"
+"0","netflix_user1_data <- netflix_user1_data %>%"
+"0","  mutate(Episodes = """")"

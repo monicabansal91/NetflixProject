@@ -1,0 +1,75 @@
+---
+title: "Are You Binging on Netflix?"
+author: "Monica Bansal"
+date: "April 29, 2018"
+output:
+  ioslides_presentation:
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(RMySQL)
+api.key.omdb <- "c8e8512b"
+```
+## Aim
+
+The goal of this project is to gather insights into any user's Netflix viewing history.
+
+### Questions Asked
+
+- Which Shows you binged watch?
+- Which Genres you most like?
+- Which seasons of particular shows are your favorite?
+
+## Data Collection
+
+I scraped the data from User's Netflix Account using Selenium Tool.
+
+I will get the data and will dump into text file and will consider that as my raw data.
+
+In raw data, every entry looks like
+
+* "1" "4/9/18" "Friends: Season 8: \"The One with Monica's Boots\"" "https://www.netflix.com/title/70274176"
+
+
+## Data Cleaning
+
+```{r readRawFile, echo = FALSE, warning=FALSE}
+
+```
+
+Then, I will read the data from the raw text file and will create a Data frame for the viewing history. It will have following columns:
+
+- Watching Date
+- Titles
+- Season
+- Episodes
+
+--
+
+```{r cleaningFile, echo = FALSE, warning=FALSE}
+
+
+```
+
+
+```{r omdbData, echo = FALSE, warning=FALSE}
+
+```
+
+
+## SQL- store the data tables 
+
+```{r sqlchunk, echo=FALSE}
+
+
+```
+
+
+## Analysis - Interesting Findings
+
+## Shiny App
+
+## Future Scope

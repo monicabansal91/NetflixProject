@@ -1,0 +1,173 @@
+---
+title: "Are You Binging on Netflix?"
+author: "Monica Bansal"
+date: "April 29, 2018"
+output:
+  ioslides_presentation:
+    widescreen: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+#File contains all the functions
+source("../R/functions.R")
+library(tidyverse)
+library(RMySQL)
+api.key.omdb <- "c8e8512b"
+```
+## Aim
+
+The goal of this project is to gather insights into any user's Netflix viewing history.
+
+### Questions Asked
+
+- Which Shows you binged watch?
+- Which Genres you most like?
+- Which seasons of particular shows are your favorite?
+
+## Data Collection
+
+I scraped the data from User's Netflix Account using Selenium Tool.
+The script for the same is in the 'R' folder.
+
+I will get the data and will dump into text file and will consider that as my raw data.
+The raw file is in the 'data' folder.
+
+In raw data, every entry looks like
+
+* "1","4/29/18","Sherlock: Series 4: ""The Six Thatchers""","https://www.netflix.com/title/80082998"
+* "2","4/26/18","Friends: Season 9: ""The One with the Memorial Service""","https://www.netflix.com/title/70274207"
+
+
+## Data Cleaning
+
+```{r readRawFile, echo = FALSE, warning=FALSE}
+
+netflix_user1_data <- read_csv("../data/netflix_user4.txt", col_types = cols(WatchingDate = col_date(format = "%m/%d/%y"), X1 = col_skip(), value = col_skip()), locale = locale(encoding = "ISO-8859-1"))
+
+netflix_user1_data <- netflix_user1_data %>%
+  mutate(season = "")
+netflix_user1_data <- netflix_user1_data %>%
+  mutate(Episodes = "")
+
+```
+
+Then, I will read the data from the raw text file and will create a Data frame for the viewing history. It will have following columns:
+
+- Watching Date
+- Titles
+- Season
+- Episodes
+
+---
+
+Then, I will split the Titles column to extract the season and episodes.
+ 
+I used regex to find the patterns like 'ShowTitle:Season 1:Episode 1', some of them have series or volume. 
+
+There are some cases like 'Stranger Things: Stranger Things 2: ""Chapter Four: Will the Wise"', I also handled those cases.
+After getting seasons and episodes, I set NA to the remaining that implies they are movies.
+
+---
+
+```{r cleaningFile, echo=FALSE, warning=FALSE, paged.print=TRUE}
+
+#Removing the double Quotes
+netflix_user1_data$Titles <- sapply(netflix_user1_data$Titles, removeDoubleQuotes)
+
+#Iterating the userviewing history table to set the season and episodes column
+netflix_user1_data <- setEpisodesTitles(netflix_user1_data)
+
+#Viewing the Table
+knitr::kable(netflix_user1_data)
+
+```
+
+---
+
+To get the Show details, I used OMDB api. 
+
+1. I created the list of all the distinct shows from user's history table.
+
+---
+
+```{r omdbData, echo=FALSE, warning=FALSE, paged.print=TRUE}
+#Getting the distinct shows
+distinctShows <- netflix_user1_data[!duplicated(netflix_user1_data$Titles), ]
+
+#Showing the distinct Shows
+knitr::kable(distinctShows$Titles)
+
+```
+
+---
+
+1. Then, I write a function to get the details of that show by calling the omdb api.
+1. I didn't get the data for 12 shows out of 189 total shows. 
+1. I created the data frame for show details that have following columns:
+   Year, rated, released, runtime, Genre, Director, writer, cast, Type and many more.
+1. I cleaned 'Runtime' to make it numeric and 'Type' because for some of the movies, Netflix has created the Netflix Series like Gangs of wasseypur. So, I matched with the user history data to see that no show type is marked wrong.
+
+---
+
+```{r omdb2, echo = FALSE, warning=FALSE}
+
+#Creating the data frame that contains only Titles
+showDetailsDf <- distinctShows %>%
+  select(Titles)
+
+#Adding the new columns to the dataframe
+showDetailsDf <- showDetailsDf %>%
+  mutate(Year="", Rated="", Released="", Runtime="", Genre="", Director="", Writer="", Actors="", Plot="", Language="", Country="", imdbRating="", imdbVotes="", imdbID="", Type="")
+
+#Setting the showdetails dataframe
+showDetailsDf <- settingShowDetails(showDetailsDf)
+
+#Cleaning the Runtime,year,actors
+showDetailsDf$Runtime <- sapply(showDetailsDf$Runtime, cleanRuntime)
+showDetailsDf$Year <- sapply(showDetailsDf$Year, cleanYear)
+showDetailsDf$Actors <- sapply(showDetailsDf$Actors, convertToUTF8)
+
+#Show the clean Showdetails dataframe
+knitr::kable(showDetailsDf)
+```
+
+---
+
+## SQL- store the data tables 
+
+```{r sqlchunk, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+mydb = dbConnect(MySQL(), 
+                 user = 'root', 
+                 password = 'Pass@123', 
+                 dbname = 'netflix_data', 
+                 host = 'localhost')
+
+dbWriteTable(mydb, name = 'user1_data', value = netflix_user1_data)
+
+dbWriteTable(mydb, name = 'show_data', value = showDetailsDf)
+
+```
+
+Then, I used MySQL database to store my 2 tables because in future, I can make a scheduler to update the viewing history of the user as it did not make any sense to run the selenium script to get all the data. We can get only the new records that are added to update the Sql database.
+
+For now, I am not executing the SQL code, but writing the clean data in a csv file, so that shiny app can be executed. So, saving the file in the 'output' folder.
+
+```{r writeCSVfile, echo=FALSE}
+write_excel_csv(x = netflix_user1_data, path = "../output/NetflixApp/user1_data.csv")
+write_excel_csv(x = showDetailsDf, path = "../output/NetflixApp/show_data.csv")
+```
+
+## Shiny App
+
+ To execute the shiny app, Go to the output folder, and run the app.
+
+ or
+
+ https://monicabansal.shinyapps.io/NetflixApp/
+
+## Future Scope
+
+1. Scheduler to update the MySQL database.
+1. Find another source of data to get the show details of which OMDBI do not have any data.
+1. Include other subscriptions like HULU, HOTSTAR and many more.

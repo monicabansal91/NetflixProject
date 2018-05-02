@@ -1,0 +1,54 @@
+"0","knitr::opts_chunk$set(echo = FALSE)"
+"0","source(""../R/functions.R"")"
+"0","library(tidyverse)"
+"0","library(RMySQL)"
+"2","Warning in file.path(lib.loc, pkg) :"
+"2","
+ "
+"2"," closing unused connection 11 (http://www.omdbapi.com/?apikey=c8e8512b&t=Baby+on+Board&r=json)
+"
+"2","Warning in file.path(lib.loc, pkg) :"
+"2","
+ "
+"2"," closing unused connection 10 (http://www.omdbapi.com/?apikey=c8e8512b&t=We're+the+Millers&r=json)
+"
+"2","Warning in file.path(lib.loc, pkg) :"
+"2","
+ "
+"2"," closing unused connection 9 (http://www.omdbapi.com/?apikey=c8e8512b&t=17+Again&r=json)
+"
+"2","Warning in file.path(lib.loc, pkg) :"
+"2","
+ "
+"2"," closing unused connection 8 (http://www.omdbapi.com/?apikey=c8e8512b&t=Pretty+Little+Liars&r=json)
+"
+"2","Warning in file.path(lib.loc, pkg) :"
+"2","
+ "
+"2"," closing unused connection 7 (http://www.omdbapi.com/?apikey=c8e8512b&t=Lipstick+Jungle&r=json)
+"
+"2","Warning in file.path(lib.loc, pkg) :"
+"2","
+ "
+"2"," closing unused connection 6 (http://www.omdbapi.com/?apikey=c8e8512b&t=The+Silenced&r=json)
+"
+"2","Warning in file.path(lib.loc, pkg) :"
+"2","
+ "
+"2"," closing unused connection 5 (http://www.omdbapi.com/?apikey=c8e8512b&t=Udta+Punjab&r=json)
+"
+"2","Warning in file.path(lib.loc, pkg) :"
+"2","
+ "
+"2"," closing unused connection 4 (http://www.omdbapi.com/?apikey=c8e8512b&t=World+War+II+in+Colour&r=json)
+"
+"2","Warning in file.path(lib.loc, pkg) :"
+"2","
+ "
+"2"," closing unused connection 3 (http://www.omdbapi.com/?apikey=c8e8512b&t=Anarkali+of+Aarah&r=json)
+"
+"2","package ‘RMySQL’ was built under R version 3.4.4"
+"2","Loading required package: DBI
+"
+"2","package ‘DBI’ was built under R version 3.4.4"
+"0","api.key.omdb <- ""c8e8512b"""
